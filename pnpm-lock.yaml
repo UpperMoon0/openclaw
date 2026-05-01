@@ -618,6 +618,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/plugin-sdk
 
+  extensions/gemini-wrapper: {}
+
   extensions/github-copilot:
     dependencies:
       '@clack/prompts':

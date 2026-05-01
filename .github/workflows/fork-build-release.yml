@@ -1,0 +1,77 @@
+name: Build and Release Package
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-release-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "24.x"
+  PNPM_VERSION: "10.33.0"
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          fetch-tags: true
+
+      - name: Setup Node environment
+        uses: ./.github/actions/setup-node-env
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          pnpm-version: ${{ env.PNPM_VERSION }}
+          install-bun: "false"
+
+      - name: Build
+        run: pnpm build
+
+      - name: Build Control UI
+        run: pnpm ui:build
+
+      - name: Pack npm tarball
+        id: pack
+        env:
+          TAG_NAME: ${{ github.sha }}
+        run: |
+          npm pack --json 2>&1 | tee /tmp/pack-output.json
+          PACK_PATH=$(node - "$/tmp/pack-output.json" <<'NODE'
+          const fs = require("node:fs");
+          const input = fs.readFileSync(process.argv[2], "utf8");
+          const match = input.match(/"filename"\s*:\s*"([^"]+)"/);
+          if (match) process.stdout.write(match[1]);
+          NODE
+          )
+          if [ -z "$PACK_PATH" ] || [ ! -f "$PACK_PATH" ]; then
+            echo "npm pack failed"
+            exit 1
+          fi
+          echo "path=$PACK_PATH" >> "$GITHUB_OUTPUT"
+
+      - name: Determine version
+        id: version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: fork-build-${{ github.sha }}
+          release_name: "Fork Build ${{ steps.version.outputs.version }} (${{ github.sha }})"
+          files: ${{ steps.pack.outputs.path }}
+          draft: false
+          prerelease: true
+          generate_release_notes: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
