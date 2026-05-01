@@ -1,0 +1,9 @@
+{
+  "name": "@openclaw/gemini-wrapper-provider",
+  "version": "2026.4.25",
+  "description": "Local Gemini-Wrapper provider for OpenClaw",
+  "type": "module",
+  "main": "index.ts",
+  "dependencies": {},
+  "devDependencies": {}
+}

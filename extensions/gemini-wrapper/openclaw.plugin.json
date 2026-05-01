@@ -1,0 +1,21 @@
+{
+  "id": "gemini-wrapper",
+  "providers": ["gemini-wrapper"],
+  "providerAuthChoices": [
+    {
+      "provider": "gemini-wrapper",
+      "method": "none",
+      "choiceId": "gemini-wrapper-local",
+      "choiceLabel": "Local Gemini Wrapper",
+      "choiceHint": "Direct connection to http://localhost:11435",
+      "groupId": "gemini-wrapper",
+      "groupLabel": "Gemini Wrapper",
+      "groupHint": "Local proxy for Gemini models"
+    }
+  ],
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {}
+  }
+}
